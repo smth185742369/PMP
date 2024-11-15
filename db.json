@@ -1,12 +1,14 @@
 {
   "my_budget_items": [
-      {
-        "name": "Groceries",
-        "amount": "100"
-      },
-      {
-        "name": "Transportation",
-        "amount": "50"
-      }
-    ]
+    {
+      "id": 1,
+      "name": "Groceries",
+      "amount": "100"
+    },
+    {
+      "id": 2,
+      "name": "Transportation",
+      "amount": "50"
+    }
+  ]
 }
