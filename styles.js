@@ -1,12 +1,21 @@
-// styles.js
-
 import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#0f0f1f',
+  },
+  lightContainer: {
+    backgroundColor: '#f5f5f5', // светлый фон для светлой темы
+  },
+  darkContainer: {
+    backgroundColor: '#0f0f1f', // фон для тёмной темы
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 20,
   },
   button: {
     paddingVertical: 15,

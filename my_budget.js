@@ -1,34 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, FlatList } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from './styles';
 import useTranslation from './useTranslation';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 
-const STORAGE_KEY = '@my_budget_items'; // Ключ для хранения в AsyncStorage
+const queryClient = new QueryClient();
+const API_URL = 'https://my-json-server.typicode.com/smth185742369/PMP/my_budget_items'; // Убедитесь, что это правильный URL для db.json
 
-function MyBudget({ route }) {
+function MyBudgetWithoutProvider() {
   const { t } = useTranslation();
-  const [items, setItems] = useState([]);
 
-  // Функция для загрузки данных из AsyncStorage
-  const loadItems = async () => {
-    try {
-      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
-      const storedItems = jsonValue ? JSON.parse(jsonValue) : [];
-      setItems(storedItems);
-    } catch (e) {
-      console.error("Error loading items", e);
-    }
-  };
-
-  // Обработка новых пунктов при переходе
-  useEffect(() => {
-    loadItems(); // Загрузить пункты при монтировании компонента
-
-    if (route.params?.newItem) {
-      setItems(route.params.newItem); // Установить новые элементы, если они переданы
-    }
-  }, [route.params?.newItem]);
+  // Запрос данных с помощью react-query
+  const { data: items, error, isLoading } = useQuery({
+    queryKey: ['budgetItems'],
+    queryFn: async () => {
+      const response = await fetch(API_URL);
+      if (!response.ok) throw new Error('Network response was not ok');
+      return response.json();
+    },
+    refetchOnWindowFocus: true, // Обновление данных при фокусе на окно
+    staleTime: 5000, // Время, через которое данные будут считаться устаревшими
+  });
 
   const renderItem = ({ item }) => (
     <View style={styles.item}>
@@ -39,12 +31,22 @@ function MyBudget({ route }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{t('myBudget')}</Text>
+      {isLoading && <Text>Loading...</Text>}
+      {error && <Text>Error fetching data</Text>}
       <FlatList
-        data={items}
+        data={items || []}
         renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.id.toString()}  
       />
     </View>
+  );
+}
+
+function MyBudget(props) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <MyBudgetWithoutProvider {...props} />
+    </QueryClientProvider>
   );
 }
 

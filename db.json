@@ -1,1 +1,13 @@
-{}
+{
+    "my_budget_items": [
+      {
+        "name": "Groceries",
+        "amount": "100"
+      },
+      {
+        "name": "Transportation",
+        "amount": "50"
+      }
+    ]
+  }
+  

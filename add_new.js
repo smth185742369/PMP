@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, TextInput } from 'react-native';
 import styles from './styles';
 import useTranslation from './useTranslation';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const STORAGE_KEY = '@my_budget_items'; // Ключ для хранения в AsyncStorage
+const API_URL = 'https://my-json-server.typicode.com/smth185742369/PMP/my_budget_items'; // Убедитесь, что это правильный URL
 
 function AddNew({ navigation }) {
   const { t } = useTranslation();
@@ -13,29 +12,52 @@ function AddNew({ navigation }) {
 
   const handleAddPress = async () => {
     if (!itemName || !itemAmount) {
-      Alert.alert(t('pleaseEnterBothFields')); // Сообщение об ошибке
+      Alert.alert(t('pleaseEnterBothFields'));
       return;
     }
 
-    // Загружаем существующие пункты из AsyncStorage
-    const existingItems = await AsyncStorage.getItem(STORAGE_KEY);
-    const itemsArray = existingItems ? JSON.parse(existingItems) : [];
+    try {
+      // Преобразуем amount в число, если это необходимо
+      const newItem = { 
+        name: itemName, 
+        amount: parseFloat(itemAmount), // Преобразуем amount в число
+      };
 
-    // Добавление нового пункта
-    const newItem = { name: itemName, amount: itemAmount };
-    const updatedItems = [...itemsArray, newItem];
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newItem),
+      });
 
-    // Сохраняем обновленный список в AsyncStorage
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedItems));
+      const responseText = await response.text(); // Получаем сырой текст ответа
+      console.log('Raw server response:', responseText);
 
-    // Сброс полей ввода
-    setItemName('');
-    setItemAmount('');
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText); // Попытка преобразовать в JSON
+      } catch (parseError) {
+        throw new Error(`Неожиданный ответ от сервера: ${responseText}`);
+      }
 
-    // Навигация к экрану MyBudget с обновленным списком
-    navigation.navigate('MyBudget', {
-      newItem: updatedItems,
-    });
+      // Проверяем, был ли ответ успешным
+      if (!response.ok) {
+        throw new Error(`Ошибка сервера: ${response.status}`);
+      }
+
+      console.log('Parsed server response:', responseData);
+
+      // Очистка состояния
+      setItemName('');
+      setItemAmount('');
+      
+      Alert.alert(t('itemAddedSuccessfully'));
+      navigation.navigate('MyBudget'); // Переход на экран бюджета
+    } catch (error) {
+      console.error('Ошибка при добавлении элемента:', error);
+      Alert.alert(t('errorAddingItem')); // Сообщение об ошибке
+    }
   };
 
   return (
